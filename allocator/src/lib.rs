@@ -6,7 +6,9 @@ use std::{
 };
 
 const ALLOC_MEM_SIZE: usize = 4 * 1024 * 1024;
+const MAX_ALIGNMENT: usize = 4096;
 
+#[repr(C, align(4096))]
 pub struct MyAlloc {
     mem: UnsafeCell<[u8; ALLOC_MEM_SIZE]>,
     ptr: AtomicUsize,
@@ -24,6 +26,10 @@ unsafe impl GlobalAlloc for MyAlloc {
     unsafe fn alloc(&self, layout: Layout) -> *mut u8 {
         let size = layout.size();
         let align = layout.align();
+
+        if align >= MAX_ALIGNMENT {
+            return null_mut();
+        }
 
         let mut offset = 0;
 
